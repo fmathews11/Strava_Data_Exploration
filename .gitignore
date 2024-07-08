@@ -1,3 +1,4 @@
 global_variables.py
 /.idea
 Sandbox.ipynb
+ __pycache__
