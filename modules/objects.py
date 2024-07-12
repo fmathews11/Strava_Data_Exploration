@@ -10,16 +10,32 @@ def _validate_strava_ride(obj) -> None:
 
 @dataclass
 class StravaRide:
-    """Simple dataclass created to house ride information"""
+    """
+    Simple dataclass created to house ride information
+    """
+
     id: int
     metadata: Dict
     metrics_dict: Dict[str, list]
 
     def to_dict(self):
-        """Method to return the data in a Python dictionary format"""
+        """
+        Method to return the data in a Python dictionary format
+        """
+
         return {"id": self.id,
                 "metadata": self.metadata,
                 "metrics_dict": self.metrics_dict}
+
+    @classmethod
+    def from_dict(cls,input_dict:dict) -> 'StravaRide':
+        """
+        Class method to create a StravaRide from a dictionary which contain the necessary keys
+        """
+
+        if any(i not in input_dict.keys() for i in ['id','metadata','metrics_dict']):
+            raise AttributeError("Each of 'id','metadata','metrics_dict' must be present in dictionary keys")
+        return cls(id=input_dict['id'],metadata=input_dict['metadata'],metrics_dict=input_dict['metrics_dict'])
 
 
 class RideHub:
@@ -44,13 +60,19 @@ class RideHub:
     def __repr__(self):
         return self.__str__()
 
-    def add_ride(self, ride_obj):
-        """Add a ride to an existing list"""
+    def add_ride(self, ride_obj) -> None:
+        """
+        Add a ride to an existing list
+        """
+
         _validate_strava_ride(ride_obj)
         self._ride_list.append(ride_obj)
 
     def remove_ride(self, ride_id_to_remove):
-        """Removes a ride from the internal ride list based on ID"""
+        """
+        Removes a ride from the internal ride list based on ID
+        """
+
         id_set = set([ride.id for ride in self._ride_list])
 
         if ride_id_to_remove not in id_set:
@@ -58,8 +80,7 @@ class RideHub:
 
         self._ride_list = [ride for ride in self._ride_list if ride_id_to_remove.id != ride_id_to_remove]
 
-    def create_json_output(self):
-
+    def create_json_output(self) -> list[dict]:
         """
         Converts a series of StravaRide objects to one list of dictionaries for writing JSON
         files
@@ -68,6 +89,10 @@ class RideHub:
         return [ride.to_dict() for ride in self._ride_list]
 
     def get(self, ride_id: int) -> StravaRide:
+        """
+        Returns a single StravaRide object associated with the user-passed `ride_id` argument
+        """
+
         if ride_id not in self.ride_ids:
             raise ValueError(f"{ride_id} does not exist")
         return [i for i in self._ride_list if i.id == ride_id][0]
@@ -78,6 +103,7 @@ class RideHub:
         A "getter" method to access the ride list attribute. Using the @property decorator to not allow modification
         of the list.  This must be done via the `add_ride()` and `remove_ride()` class methods
         """
+
         return self._ride_list
 
     @property
@@ -85,4 +111,5 @@ class RideHub:
         """
         A "getter" method to access a list of ride IDs
         """
+
         return [i.id for i in self._ride_list]
