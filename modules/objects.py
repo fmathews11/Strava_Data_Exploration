@@ -77,6 +77,12 @@ class RideHub:
         self._pointer += 1
         return result
 
+    def __contains__(self, ride_id: int):
+        """
+        Returns True if user-passed ID is an ID in the ride list
+        """
+        return ride_id in self.ride_ids
+
     def add_ride(self, ride_obj) -> None:
         """
         Add a ride to an existing list

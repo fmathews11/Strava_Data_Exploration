@@ -23,7 +23,7 @@ def main() -> None:
 
     all_activities = get_activity_data(token, params={'per_page': 200})
     ride_ids_with_power_meter_data = [i['id'] for i in all_activities if i.get('device_watts')]
-    ride_ids_to_update = [i for i in ride_ids_with_power_meter_data if i not in saved_ride_hub.ride_ids]
+    ride_ids_to_update = [i for i in ride_ids_with_power_meter_data if i not in saved_ride_hub]
     logger.info(f"{len(ride_ids_to_update)} rides to add to pre-existing ride hub")
 
     if not ride_ids_to_update:
