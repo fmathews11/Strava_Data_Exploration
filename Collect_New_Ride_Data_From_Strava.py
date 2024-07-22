@@ -22,12 +22,9 @@ def main() -> None:
     headers = {'Authorization': f'Authorization: Bearer {token}'}
 
     all_activities = get_activity_data(token, params={'per_page': 200})
-    ride_ids_with_power_meter_data = [i['id'] for i in all_activities if i.get('average_watts')]
+    ride_ids_with_power_meter_data = [i['id'] for i in all_activities if i.get('device_watts')]
     ride_ids_to_update = [i for i in ride_ids_with_power_meter_data if i not in saved_ride_hub.ride_ids]
     logger.info(f"{len(ride_ids_to_update)} rides to add to pre-existing ride hub")
-    logger.debug(ride_ids_to_update)
-    logger.debug(saved_ride_hub.ride_ids)
-    logger.debug([i in saved_ride_hub.ride_list for i in ride_ids_to_update])
 
     if not ride_ids_to_update:
         logger.info("No new rides to add")
@@ -44,11 +41,10 @@ def main() -> None:
 
         saved_ride_hub.add_ride(ride_object)
         time.sleep(np.random.randint(5, 30))
-        logger.debug(f"{ride_id_to_update} has been successfully pulled")
 
     with open('data/saved_strava_rides.json', 'w') as file:
         json.dump(saved_ride_hub.create_json_output(), file)
-        logger.info("Successful write")
+        logger.info(f"Successful write, {len(saved_ride_hub)} total rides with power data")
     return
 
 
