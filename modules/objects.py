@@ -28,14 +28,14 @@ class StravaRide:
                 "metrics_dict": self.metrics_dict}
 
     @classmethod
-    def from_dict(cls,input_dict:dict) -> 'StravaRide':
+    def from_dict(cls, input_dict: dict) -> 'StravaRide':
         """
         Class method to create a StravaRide from a dictionary which contain the necessary keys
         """
 
-        if any(i not in input_dict.keys() for i in ['id','metadata','metrics_dict']):
+        if any(i not in input_dict.keys() for i in ['id', 'metadata', 'metrics_dict']):
             raise AttributeError("Each of 'id','metadata','metrics_dict' must be present in dictionary keys")
-        return cls(id=input_dict['id'],metadata=input_dict['metadata'],metrics_dict=input_dict['metrics_dict'])
+        return cls(id=input_dict['id'], metadata=input_dict['metadata'], metrics_dict=input_dict['metrics_dict'])
 
 
 class RideHub:
@@ -60,6 +60,23 @@ class RideHub:
     def __repr__(self):
         return self.__str__()
 
+    def __len__(self):
+        return len(self._ride_list)
+
+    def __iter__(self):
+        self._pointer = 0
+        return self
+
+    def __next__(self):
+        """
+        Guide for iteration
+        """
+        if self._pointer > len(self._ride_list) - 1:
+            raise StopIteration
+        result = self._ride_list[self._pointer]
+        self._pointer += 1
+        return result
+
     def add_ride(self, ride_obj) -> None:
         """
         Add a ride to an existing list
@@ -68,17 +85,20 @@ class RideHub:
         _validate_strava_ride(ride_obj)
         self._ride_list.append(ride_obj)
 
-    def remove_ride(self, ride_id_to_remove):
+    def remove_ride(self, ride_to_remove):
+        """
+        Removes a ride from the internal ride list
+        """
+        self._ride_list = [ride_to_keep for ride_to_keep in self._ride_list if ride_to_keep.id != ride_to_remove.id]
+
+    def remove_ride_by_id(self, ride_id_to_remove):
         """
         Removes a ride from the internal ride list based on ID
         """
+        if ride_id_to_remove not in self.ride_ids:
+            raise ValueError(f"Ride {ride_id_to_remove} is not in this RideHub object")
 
-        id_set = set([ride.id for ride in self._ride_list])
-
-        if ride_id_to_remove not in id_set:
-            raise ValueError(f"{ride_id_to_remove} is not contained in this RideHub")
-
-        self._ride_list = [ride for ride in self._ride_list if ride_id_to_remove.id != ride_id_to_remove]
+        self._ride_list = [ride_to_keep for ride_to_keep in self._ride_list if ride_to_keep.id != ride_id_to_remove]
 
     def create_json_output(self) -> list[dict]:
         """
