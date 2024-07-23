@@ -83,6 +83,11 @@ class RideHub:
         """
         return ride_id in self.ride_ids
 
+    def __getitem__(self, ride_id):
+        if ride_id not in self.ride_ids:
+            raise ValueError(f"{ride_id} does not exist")
+        return [i for i in self._ride_list if i.id == ride_id][0]
+
     def add_ride(self, ride_obj) -> None:
         """
         Add a ride to an existing list
@@ -114,14 +119,7 @@ class RideHub:
 
         return [ride.to_dict() for ride in self._ride_list]
 
-    def get(self, ride_id: int) -> StravaRide:
-        """
-        Returns a single StravaRide object associated with the user-passed `ride_id` argument
-        """
 
-        if ride_id not in self.ride_ids:
-            raise ValueError(f"{ride_id} does not exist")
-        return [i for i in self._ride_list if i.id == ride_id][0]
 
     @property
     def ride_list(self):
