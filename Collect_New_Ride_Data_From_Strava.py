@@ -4,8 +4,8 @@ from tqdm import tqdm
 import time
 import numpy as np
 from modules.api_functions import generate_access_token, get_activity_data
-from modules.logger import create_logger
-from modules.objects import StravaRide,RideHub
+from modules.create_logger import create_logger
+from modules.objects.RideHub import StravaRide, RideHub
 
 logger = create_logger('RideStatusLogger', 'debug')
 endpoint_suffix = ("/streams?keys=time,distance,latlng,altitude,velocity_smooth,heartrate,cadence,watts,temp,moving,"
@@ -31,7 +31,6 @@ def main() -> None:
         return
 
     for ride_id_to_update in tqdm(ride_ids_to_update):
-
         activity_stream_endpoint = f"https://www.strava.com/api/v3/activities/{ride_id_to_update}{endpoint_suffix}"
         response = requests.get(activity_stream_endpoint, headers=headers)
 
@@ -50,4 +49,3 @@ def main() -> None:
 
 if __name__ == '__main__':
     main()
-
