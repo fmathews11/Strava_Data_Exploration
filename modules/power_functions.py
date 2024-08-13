@@ -1,5 +1,7 @@
 from typing import Iterable
 import numpy as np
+
+from global_variables import CURRENT_LACTATE_THRESHOLD
 from modules.universal_functions import create_moving_average_array
 
 
@@ -36,3 +38,18 @@ def calculate_normalized_power_from_metrics_dict(input_dict: dict) -> int:
     boolean_array = np.array(input_dict.get('moving'))
     # Return the subset array
     return _convert_power_array_to_normalized_power_value(np.array(input_dict.get('watts'))[boolean_array])
+
+
+def identify_heart_rate_zone(heart_rate_value: int) -> int:
+    """Identifies heart rate zones based on the lactate threshold in the global variables file.
+    This method was researched and proposed by Andrew Coggan"""
+    if heart_rate_value > CURRENT_LACTATE_THRESHOLD:
+        return 5
+    if heart_rate_value >= round(CURRENT_LACTATE_THRESHOLD * 0.95, 0):
+        return 4
+    if heart_rate_value >= round(CURRENT_LACTATE_THRESHOLD * 0.89, 0):
+        return 3
+    if heart_rate_value >= round(CURRENT_LACTATE_THRESHOLD * 0.8, 0):
+        return 2
+    return 1
+
