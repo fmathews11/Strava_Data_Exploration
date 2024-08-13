@@ -119,8 +119,6 @@ class RideHub:
 
         return [ride.to_dict() for ride in self._ride_list]
 
-
-
     @property
     def ride_list(self):
         """
