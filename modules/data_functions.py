@@ -2,7 +2,8 @@ import json
 from typing import Any
 import pandas as pd
 from modules.objects.RideHub import RideHub
-from modules.power_functions import calculate_normalized_power_from_metrics_dict
+from modules.power_functions import calculate_normalized_power_from_metrics_dict, calculate_training_stress_score
+from global_variables import CURRENT_FTP
 
 master_column_list = ['resource_state',
                       'id',
@@ -45,7 +46,6 @@ master_column_list = ['resource_state',
                       'average_watts',
                       'max_watts',
                       'weighted_average_watts',
-                      'normalized_power',
                       'kilojoules',
                       'device_watts',
                       'has_heartrate',
@@ -62,7 +62,10 @@ master_column_list = ['resource_state',
                       'pr_count',
                       'total_photo_count',
                       'has_kudoed',
-                      'suffer_score']
+                      'suffer_score',
+                      'normalized_power',
+                      'intensity_factor',
+                      'tss']
 
 with open('data/saved_strava_rides.json', 'r') as f:
     ride_hub = RideHub(*json.load(f))
@@ -97,6 +100,17 @@ def _convert_total_seconds_to_HMS_format(total_seconds: int) -> str:
     minutes, seconds = divmod(total_seconds, 60)
     hours, minutes = divmod(minutes, 60)
     return f"{hours}:{minutes}:{seconds}"
+
+
+def _apply_training_stress_score(row):
+    """
+    Quick mapping function to apply the TSS calculation across several fields.
+    Will be used in tandem with Pandas' `apply()` method.
+    """
+    return calculate_training_stress_score(row.moving_time_seconds,
+                                           row.normalized_power,
+                                           row.intensity_factor,
+                                           CURRENT_FTP)
 
 
 def create_normalized_power_dict() -> dict:
@@ -140,7 +154,11 @@ def create_ride_summary_dataframe() -> pd.DataFrame:
     output_df = output_df.rename(columns={'elapsed_time': 'elapsed_time_seconds'})
     output_df['moving_time'] = output_df.moving_time_seconds.map(_convert_total_seconds_to_HMS_format)
     output_df['elapsed_time'] = output_df.elapsed_time_seconds.map(_convert_total_seconds_to_HMS_format)
-    # Add normalized power
+
+    # Add normalized power, IF and TSS
     output_df['normalized_power'] = output_df.id.map(create_normalized_power_dict())
+    output_df['intensity_factor'] = output_df.normalized_power.map(lambda x: x / CURRENT_FTP)
+    output_df['tss'] = output_df.apply(lambda x: _apply_training_stress_score(x), axis=1)
+
     # Return the output with the correct columns/order with the most recent being first
-    return output_df[master_column_list].sort_values('start_date', ascending=False)
+    return output_df[master_column_list].sort_values('start_date', ascending=False).drop_duplicates()

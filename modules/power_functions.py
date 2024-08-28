@@ -1,6 +1,5 @@
 from typing import Iterable
 import numpy as np
-
 from global_variables import CURRENT_LACTATE_THRESHOLD
 from modules.universal_functions import create_moving_average_array
 
@@ -53,3 +52,11 @@ def identify_heart_rate_zone(heart_rate_value: int) -> int:
         return 2
     return 1
 
+
+def calculate_training_stress_score(total_seconds: int,
+                                    normalized_power: float,
+                                    intensity_factor: float,
+                                    ftp: int) -> float:
+
+    """Uses TrainerRoad's method to determine training stress score"""
+    return 100*((total_seconds * normalized_power * intensity_factor) / (ftp * 3600))
