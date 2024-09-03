@@ -1,5 +1,4 @@
-from dataclasses import dataclass
-from typing import Dict, Union
+from typing import Union
 from modules.objects.Base import RideHubBase, _validate_strava_ride, StravaRide
 
 
