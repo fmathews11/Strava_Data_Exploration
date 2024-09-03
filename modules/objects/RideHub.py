@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, Union
 
 
 # Internal use
@@ -49,6 +49,10 @@ class RideHub:
     def __init__(self, *args):
 
         for sub_dict in args:
+
+            if sub_dict['id'] in self.ride_ids:
+                continue
+
             temp_ride_object = StravaRide(sub_dict['id'],
                                           metadata=sub_dict['metadata'],
                                           metrics_dict=sub_dict['metrics_dict'])
@@ -118,6 +122,13 @@ class RideHub:
         """
 
         return [ride.to_dict() for ride in self._ride_list]
+
+    def get_ride(self, ride_id: int) -> Union[StravaRide, None]:
+        """
+        Mimicking the Python dictionary .get() method.
+        Returning None if the ride_id is not found rather than raising an error
+        """
+        return self.__getitem__(ride_id=ride_id) if ride_id in self.ride_ids else None
 
     @property
     def ride_list(self):
