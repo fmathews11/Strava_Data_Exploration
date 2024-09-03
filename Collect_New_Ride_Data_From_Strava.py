@@ -5,7 +5,8 @@ import time
 import numpy as np
 from modules.api_functions import generate_access_token, get_activity_data
 from modules.create_logger import create_logger
-from modules.objects.RideHub import StravaRide, RideHub
+from modules.objects.RideHub import RideHub
+from modules.objects.Base import StravaRide
 
 logger = create_logger('RideStatusLogger', 'debug')
 endpoint_suffix = ("/streams?keys=time,distance,latlng,altitude,velocity_smooth,heartrate,cadence,watts,temp,moving,"
