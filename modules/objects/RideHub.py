@@ -1,5 +1,6 @@
 from typing import Union
-from modules.objects.Base import RideHubBase, _validate_strava_ride, StravaRide
+from modules.objects.Base import RideHubBase, validate_strava_ride
+from modules.objects.StravaRide import StravaRide
 
 
 class RideHub(RideHubBase):
@@ -14,7 +15,7 @@ class RideHub(RideHubBase):
         Add a ride to an existing list
         """
 
-        _validate_strava_ride(ride_obj)
+        validate_strava_ride(ride_obj)
         self._ride_list.append(ride_obj)
 
     def remove_ride(self, ride_to_remove):
