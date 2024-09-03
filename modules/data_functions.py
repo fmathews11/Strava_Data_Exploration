@@ -67,6 +67,19 @@ master_column_list = ['resource_state',
                       'intensity_factor',
                       'tss']
 
+individual_ride_fields = ['temp',
+                          'watts',
+                          'moving',
+                          'latitude',
+                          'longitude',
+                          'velocity_smooth',
+                          'grade_smooth',
+                          'cadence',
+                          'distance',
+                          'heartrate',
+                          'altitude',
+                          'time']
+
 with open('data/saved_strava_rides.json', 'r') as f:
     ride_hub = RideHub(*json.load(f))
 
@@ -160,5 +173,23 @@ def create_ride_summary_dataframe() -> pd.DataFrame:
     output_df['intensity_factor'] = output_df.normalized_power.map(lambda x: x / CURRENT_FTP)
     output_df['tss'] = output_df.apply(lambda x: _apply_training_stress_score(x), axis=1)
 
+    # Convert start date to proper datetime format
+    output_df.start_date = pd.to_datetime(output_df.start_date)
     # Return the output with the correct columns/order with the most recent being first
     return output_df[master_column_list].sort_values('start_date', ascending=False).drop_duplicates()
+
+
+def create_individual_ride_metrics_dataframe(ride_id: int) -> pd.DataFrame:
+    """Creates a dataframe of metrics for a given ride ID"""
+
+    # Fail fast
+    if not ride_hub.get_ride(ride_id):
+        raise ValueError(f"Ride {ride_id} does not exist in the RideHub."
+                         f"Call the ride_list() method to see available rides")
+
+    output_df = pd.DataFrame(ride_hub[ride_id].metrics_dict)
+
+    output_df['latitude'] = output_df.latlng.map(lambda x: _grab_element_of_list_if_exists(x, 0))
+    output_df['longitude'] = output_df.latlng.map(lambda x: _grab_element_of_list_if_exists(x, 1))
+
+    return output_df[individual_ride_fields]
