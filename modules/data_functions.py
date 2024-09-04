@@ -67,18 +67,29 @@ master_column_list = ['resource_state',
                       'intensity_factor',
                       'tss']
 
-individual_ride_fields = ['temp',
-                          'watts',
-                          'moving',
-                          'latitude',
-                          'longitude',
-                          'velocity_smooth',
-                          'grade_smooth',
-                          'cadence',
-                          'distance',
-                          'heartrate',
-                          'altitude',
-                          'time']
+individual_ride_fields_outdoors = ['temp',
+                                   'watts',
+                                   'moving',
+                                   'latitude',
+                                   'longitude',
+                                   'velocity_smooth',
+                                   'grade_smooth',
+                                   'cadence',
+                                   'distance',
+                                   'heartrate',
+                                   'altitude',
+                                   'time']
+
+individual_ride_fields_indoors = ['temp',
+                                  'watts',
+                                  'moving',
+                                  'velocity_smooth',
+                                  'grade_smooth',
+                                  'cadence',
+                                  'distance',
+                                  'heartrate',
+                                  'altitude',
+                                  'time']
 
 with open('data/saved_strava_rides.json', 'r') as f:
     ride_hub = RideHub(*json.load(f))
@@ -188,8 +199,12 @@ def create_individual_ride_metrics_dataframe(ride_id: int) -> pd.DataFrame:
                          f"Call the ride_list() method to see available rides")
 
     output_df = pd.DataFrame(ride_hub[ride_id].metrics_dict)
+    # Determine whether it was an indoor or outdoor ride, Indoor trainer sessions have no 'latlng' field.
+    is_outdoors = 'latlng' in output_df.columns
 
-    output_df['latitude'] = output_df.latlng.map(lambda x: _grab_element_of_list_if_exists(x, 0))
-    output_df['longitude'] = output_df.latlng.map(lambda x: _grab_element_of_list_if_exists(x, 1))
+    if is_outdoors:
+        output_df['latitude'] = output_df.latlng.map(lambda x: _grab_element_of_list_if_exists(x, 0))
+        output_df['longitude'] = output_df.latlng.map(lambda x: _grab_element_of_list_if_exists(x, 1))
+        return output_df[individual_ride_fields_outdoors]
 
-    return output_df[individual_ride_fields]
+    return output_df[individual_ride_fields_indoors]
