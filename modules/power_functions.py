@@ -1,6 +1,7 @@
 from typing import Iterable
 import numpy as np
 from global_variables import CURRENT_LACTATE_THRESHOLD
+from modules.objects.RideHub import RideHub
 from modules.universal_functions import create_moving_average_array
 
 
@@ -60,3 +61,19 @@ def calculate_training_stress_score(total_seconds: int,
 
     """Uses TrainerRoad's method to determine training stress score"""
     return 100*((total_seconds * normalized_power * intensity_factor) / (ftp * 3600))
+
+
+def create_individual_ride_power_curve(ride_hub: RideHub,
+                                       ride_id: int) -> np.ndarray:
+    """Returns an array representing an individual ride curve.
+    The array is returned in such a way where the index value represents the number of seconds,
+    and the value represents the maximum average power observed over that time window.
+
+    For example, a value of 450 at index position 10 means that 450 watts was the maximum average power over a 10-second
+    window throughout the ride.
+
+    These are calculated via sliding window algorithm
+    """
+
+    watts_array = ride_hub[ride_id].metrics_dict['watts']
+    return np.array([np.max(create_moving_average_array(watts_array, i)) for i in range(1, len(watts_array) + 1)])
