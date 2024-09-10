@@ -63,8 +63,8 @@ def calculate_training_stress_score(total_seconds: int,
     return 100*((total_seconds * normalized_power * intensity_factor) / (ftp * 3600))
 
 
-def create_individual_ride_power_curve(ride_hub: RideHub,
-                                       ride_id: int) -> np.ndarray:
+def create_individual_ride_power_curve_array(ride_hub: RideHub,
+                                             ride_id: int) -> np.ndarray:
     """Returns an array representing an individual ride curve.
     The array is returned in such a way where the index value represents the number of seconds,
     and the value represents the maximum average power observed over that time window.
