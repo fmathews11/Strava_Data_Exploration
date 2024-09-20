@@ -1,8 +1,11 @@
+from datetime import datetime, timedelta
 import json
 from typing import Any
+import numpy as np
 import pandas as pd
 from modules.objects.RideHub import RideHub
-from modules.power_functions import calculate_normalized_power_from_metrics_dict, calculate_training_stress_score
+from modules.power_functions import calculate_normalized_power_from_metrics_dict, calculate_training_stress_score, \
+    identify_heart_rate_zone
 from global_variables import CURRENT_FTP
 
 master_column_list = ['resource_state',
@@ -88,6 +91,7 @@ individual_ride_fields_indoors = ['temp',
                                   'cadence',
                                   'distance',
                                   'heartrate',
+                                  'hr_zone',
                                   'altitude',
                                   'time']
 
@@ -199,12 +203,38 @@ def create_individual_ride_metrics_dataframe(ride_id: int) -> pd.DataFrame:
                          f"Call the ride_list() method to see available rides")
 
     output_df = pd.DataFrame(ride_hub[ride_id].metrics_dict)
+    # Convert speed/Distance
+    output_df.velocity_smooth = output_df.velocity_smooth.map(_convert_meters_to_feet)
+    output_df.distance = output_df.distance.map(_convert_meters_to_miles)
+
+    # Assign heart rate zones
+    output_df['hr_zone'] = output_df.heartrate.map(identify_heart_rate_zone)
     # Determine whether it was an indoor or outdoor ride, Indoor trainer sessions have no 'latlng' field.
     is_outdoors = 'latlng' in output_df.columns
-
     if is_outdoors:
         output_df['latitude'] = output_df.latlng.map(lambda x: _grab_element_of_list_if_exists(x, 0))
         output_df['longitude'] = output_df.latlng.map(lambda x: _grab_element_of_list_if_exists(x, 1))
         return output_df[individual_ride_fields_outdoors]
 
     return output_df[individual_ride_fields_indoors]
+
+
+def get_daily_tss_score_array() -> np.ndarray:
+    """This function computes the daily TSS (training stress score) for the last 43 days.
+    Days with no training are filled in with a value of zero.
+
+    Each value in the returned array represents the daily TSS for that day. Value zero represents today minus 43
+    days, and value 43 represents today.  Any days with no training receive a value of zero.
+    """
+    # Get today, subtract 43 days.  Only 42 will be shown, but we need 43 days back to calculate the TSB for day 1
+    cutoff_date = datetime.today() - timedelta(days=43)
+    summary_df = create_ride_summary_dataframe()
+    target_df = summary_df.loc[summary_df.start_date >= str(cutoff_date)][['start_date', 'tss']].set_index(
+        'start_date').copy()
+    target_df.index = pd.DatetimeIndex(target_df.index)
+    target_df.index = pd.DatetimeIndex(target_df.index.strftime('%m/%d/%Y'))
+    target_df = target_df.groupby('start_date').tss.sum().copy()
+    start_date, end_date = target_df.index.min(), target_df.index.max()
+    date_range_to_apply = pd.date_range(start_date, end_date)
+    target_df = target_df.reindex(date_range_to_apply, fill_value=0).reset_index().copy()
+    return target_df.tss.to_numpy()
