@@ -16,3 +16,8 @@ With the ability to precisely measure the force being applied to the pedals, we 
 how hard the body is working through heart rate data.
 In theory, as fitness improves, the amount of effort required to achieve any given level of power **should** decrease.
 
+$$
+\text{ATL}_{\text{today}} = \text{TRIMP} \times \lambda_a + (1 - \lambda_a) \times \text{ATL}_{\text{yesterday}}
+$$
+
+
