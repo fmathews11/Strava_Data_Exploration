@@ -6,7 +6,6 @@ import pandas as pd
 from modules.objects.RideHub import RideHub
 from modules.power_functions import calculate_normalized_power_from_metrics_dict, calculate_training_stress_score, \
     identify_heart_rate_zone
-from global_variables import CURRENT_FTP
 
 master_column_list = ['resource_state',
                       'id',
@@ -66,6 +65,7 @@ master_column_list = ['resource_state',
                       'total_photo_count',
                       'has_kudoed',
                       'suffer_score',
+                      'ftp',
                       'normalized_power',
                       'intensity_factor',
                       'tss']
@@ -138,7 +138,7 @@ def _apply_training_stress_score(row):
     return calculate_training_stress_score(row.moving_time_seconds,
                                            row.normalized_power,
                                            row.intensity_factor,
-                                           CURRENT_FTP)
+                                           row.ftp)
 
 
 def create_normalized_power_dict() -> dict:
@@ -185,7 +185,7 @@ def create_ride_summary_dataframe() -> pd.DataFrame:
 
     # Add normalized power, IF and TSS
     output_df['normalized_power'] = output_df.id.map(create_normalized_power_dict())
-    output_df['intensity_factor'] = output_df.normalized_power.map(lambda x: x / CURRENT_FTP)
+    output_df['intensity_factor'] = output_df.normalized_power / output_df.ftp
     output_df['tss'] = output_df.apply(lambda x: _apply_training_stress_score(x), axis=1)
 
     # Convert start date to proper datetime format
@@ -234,7 +234,7 @@ def get_daily_tss_score_array() -> np.ndarray:
     target_df.index = pd.DatetimeIndex(target_df.index)
     target_df.index = pd.DatetimeIndex(target_df.index.strftime('%m/%d/%Y'))
     target_df = target_df.groupby('start_date').tss.sum().copy()
-    start_date, end_date = target_df.index.min(), target_df.index.max()
+    start_date, end_date = target_df.index.min(), datetime.today()
     date_range_to_apply = pd.date_range(start_date, end_date)
     target_df = target_df.reindex(date_range_to_apply, fill_value=0).reset_index().copy()
     return target_df.tss.to_numpy()
