@@ -3,10 +3,13 @@ import json
 from tqdm import tqdm
 import time
 import numpy as np
+
+from global_variables import CURRENT_FTP
 from modules.api_functions import generate_access_token, get_activity_data
 from modules.create_logger import create_logger
 from modules.objects.RideHub import RideHub
 from modules.objects.StravaRide import StravaRide
+from modules.power_functions import create_individual_ride_power_curve_array
 
 logger = create_logger('RideStatusLogger', 'debug')
 endpoint_suffix = ("/streams?keys=time,distance,latlng,altitude,velocity_smooth,heartrate,cadence,watts,temp,moving,"
@@ -38,9 +41,14 @@ def main() -> None:
         ride_object = StravaRide(id=ride_id_to_update,
                                  metadata=[i for i in all_activities if i['id'] == ride_id_to_update][0],
                                  metrics_dict={key: array['data'] for key, array in response.json().items()})
-
         saved_ride_hub.add_ride(ride_object)
-        time.sleep(np.random.randint(5, 30))
+
+        # Calculate the power curve upon ingestion
+        power_curve = create_individual_ride_power_curve_array(saved_ride_hub, ride_id_to_update)
+        ride_object.metrics_dict['power_curve'] = list(power_curve)
+        ride_object.metadata['ftp'] = CURRENT_FTP
+
+        time.sleep(np.random.randint(5, 8))
 
     with open('data/saved_strava_rides.json', 'w') as file:
         json.dump(saved_ride_hub.create_json_output(), file)
