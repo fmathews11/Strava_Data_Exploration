@@ -1,8 +1,10 @@
 from typing import Union
 import numpy as np
 
-alpha_value_for_ctl = 2/(42+1)
-alpha_value_for_atl = 2/(7+1)
+# Alpha values for CTL and ATL (acute and chronic training loads)
+alpha_value_for_ctl = 2 / (42 + 1)
+alpha_value_for_atl = 2 / (7 + 1)
+
 
 def calculate_ewma(daily_tss_array: Union[list, np.ndarray],
                    alpha: float) -> np.ndarray:
