@@ -27,7 +27,7 @@ def generate_access_token() -> str:
     return response.json()['access_token']
 
 
-def get_activity_data(access_token: str, params: dict = None) -> dict:
+def get_activity_data(access_token: str, params: dict = None) -> list[dict]:
     """
     Returns a dictionary (response.json()) representing the user's 30 most recent activities
     """
