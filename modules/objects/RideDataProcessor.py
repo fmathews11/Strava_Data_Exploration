@@ -37,7 +37,7 @@ class RideDataProcessor:
         self.headers = headers
         self.ride_hub = ride_hub
 
-    def update_ride_data(self):
+    def retrieve_and_process_new_ride_data(self):
         """
         Retrieves and processes new ride data with power meter data, and updates the ride hub.
         """
@@ -54,7 +54,7 @@ class RideDataProcessor:
             self.process_single_ride(ride_id, all_activities)
             time.sleep(np.random.randint(5, 8))
 
-        self.save_ride_hub_to_file()
+        self._save_ride_hub_to_file()
 
     def process_single_ride(self, ride_id: int, all_activities: list[dict]) -> None:
         """
@@ -81,7 +81,7 @@ class RideDataProcessor:
         ride_object.metrics_dict['power_curve'] = list(power_curve)
         ride_object.metadata['ftp'] = CURRENT_FTP
 
-    def save_ride_hub_to_file(self) -> None:
+    def _save_ride_hub_to_file(self) -> None:
         """
         Saves the current ride hub to a file in JSON format.
         """
