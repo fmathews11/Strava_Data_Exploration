@@ -1,6 +1,5 @@
 import json
 from modules.api_functions import generate_access_token
-from modules.create_logger import create_logger
 from modules.objects.RideDataProcessor import RideDataProcessor
 from modules.objects.RideHub import RideHub
 
