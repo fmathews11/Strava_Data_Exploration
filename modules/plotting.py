@@ -5,11 +5,12 @@ from datetime import datetime, timedelta
 from modules.data_functions import create_ride_summary_dataframe
 from modules.objects.RideHub import RideHub
 from modules.training_stress_balance_functions import calculate_ctl_and_atl_arrays
-import matplotlib.pyplot as plt
-import seaborn as sns
+
+# import matplotlib.pyplot as plt
+# import seaborn as sns
 
 
-with open('data/saved_strava_rides.json','r') as f:
+with open('data/saved_strava_rides.json', 'r') as f:
     ride_hub = RideHub(*json.load(f))
 
 # Global layout parameters
@@ -43,7 +44,7 @@ GLOBAL_LAYOUT_KWARGS = {
 def plot_tsb_ctl_atl() -> None:
     """Produces a plot showing CTL, ATL, and TSB over the last 42 days"""
     date_array = list(reversed([(datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(42)]))
-    ctl,atl = calculate_ctl_and_atl_arrays()
+    ctl, atl = calculate_ctl_and_atl_arrays()
     tsb = [ctl[idx - 1] - atl[idx - 1] for idx in range(1, len(ctl))]
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=date_array,
@@ -84,49 +85,60 @@ def plot_tsb_ctl_atl() -> None:
     return
 
 
-def create_individual_ride_power_curve_plot(ride_id: int) -> None:
+# def create_individual_ride_power_curve_plot(ride_id: int) -> None:
+#
+#     """
+#     Produces a simple plot showing the power curve for an individual ride.
+#     The 20-minute average power is highlighted via a vertical yellow line
+#     """
+#     power_curve = ride_hub[ride_id].metrics_dict['power_curve']
+#     plt.figure(figsize=(16, 10))
+#     sns.lineplot(x=[i for i in range(len(power_curve))],
+#                  y=power_curve)
+#     xmin, xmax, ymin, ymax = plt.axis()
+#     annotation_value = power_curve[1200]
+#     plt.vlines(x=1200, ymax=ymax, ymin=ymin, colors='yellow', linestyles="--")
+#     plt.annotate(text=f"20-minute average: {round(annotation_value)} watts", xy=(1400, annotation_value + 30), size=12)
+#     plt.show()
 
+def plot_weekly_tss():
     """
-    Produces a simple plot showing the power curve for an individual ride.
-    The 20-minute average power is highlighted via a vertical yellow line
+    Generates a weekly Total Stress Score (TSS) plot.
+
+    This function creates a bar chart representing the weekly Total Stress Score (TSS)
+    by summarizing data from the ride summary dataframe. It also adds a smooth trend
+    line to the plot, which is computed using a rolling mean over 3 weeks. The plot is
+    prepared using Plotly's Graph Objects library and customized with layout parameters.
+
+    Returns:
+        fig (plotly.graph_objs._figure.Figure): A Plotly figure object containing the bar chart with a trend line.
     """
-    power_curve = ride_hub[ride_id].metrics_dict['power_curve']
-    plt.figure(figsize=(16, 10))
-    sns.lineplot(x=[i for i in range(len(power_curve))],
-                 y=power_curve)
-    xmin, xmax, ymin, ymax = plt.axis()
-    annotation_value = power_curve[1200]
-    plt.vlines(x=1200, ymax=ymax, ymin=ymin, colors='yellow', linestyles="--")
-    plt.annotate(text=f"20-minute average: {round(annotation_value)} watts", xy=(1400, annotation_value + 30), size=12)
-    plt.show()
+    temp_df = create_ride_summary_dataframe()
+    temp_df['date_group'] = pd.to_datetime(temp_df.start_date) - pd.to_timedelta(7, unit='d')
+    plot_df = temp_df.groupby([pd.Grouper(key='date_group', freq="W")]).tss.sum() \
+        .reset_index().sort_values('date_group', ascending=False).copy()
 
-    def plot_weekly_tss():
-        temp_df = create_ride_summary_dataframe()
-        temp_df['date_group'] = pd.to_datetime(temp_df.start_date) - pd.to_timedelta(7, unit='d')
-        plot_df = temp_df.groupby([pd.Grouper(key='date_group', freq="W")]).tss.sum()\
-            .reset_index().sort_values('date_group', ascending=False).copy()
+    plot_df['tss_smooth'] = plot_df['tss'].rolling(window=3, center=True).mean()
 
-        plot_df['tss_smooth'] = plot_df['tss'].rolling(window=3, center=True).mean()
+    title_params = {
+        "title":
+            {"text": f"Weekly TSS - 2024",
+             "x": 0.5,
+             "font": {
+                 'size': 24,
+                 'color': 'black'}
+             }
+    }
 
-        title_params = {
-            "title":
-                {"text": f"Weekly TSS - 2024",
-                 "x": 0.5,
-                 "font": {
-                     'size': 24,
-                     'color': 'black'}
-                 }
-        }
+    # Create the bar chart
+    fig = go.Figure()
 
-        # Create the bar chart
-        fig = go.Figure()
+    # Add the bar trace for TSS values
+    fig.add_trace(go.Bar(x=plot_df['date_group'], y=plot_df['tss'], name='Weekly TSS'))
 
-        # Add the bar trace for TSS values
-        fig.add_trace(go.Bar(x=plot_df['date_group'], y=plot_df['tss'], name='Weekly TSS'))
-
-        # Add the trend line (line plot over the bars)
-        fig.add_trace(go.Scatter(x=plot_df['date_group'], y=plot_df['tss_smooth'], mode='lines', showlegend=False))
-        figure_kwargs = GLOBAL_LAYOUT_KWARGS.copy()
-        figure_kwargs.update(title_params)
-        fig.update_layout(GLOBAL_LAYOUT_KWARGS)
-        return fig
+    # Add the trend line (line plot over the bars)
+    fig.add_trace(go.Scatter(x=plot_df['date_group'], y=plot_df['tss_smooth'], mode='lines', showlegend=False))
+    figure_kwargs = GLOBAL_LAYOUT_KWARGS.copy()
+    figure_kwargs.update(title_params)
+    fig.update_layout(GLOBAL_LAYOUT_KWARGS)
+    return fig
