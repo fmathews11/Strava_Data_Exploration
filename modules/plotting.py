@@ -43,18 +43,20 @@ GLOBAL_LAYOUT_KWARGS = {
 
 def plot_tsb_ctl_atl() -> None:
     """Produces a plot showing CTL, ATL, and TSB over the last 42 days"""
-    date_array = list(reversed([(datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(42)]))
+    date_array = list(reversed([(datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(43)]))
     ctl, atl = calculate_ctl_and_atl_arrays()
     tsb = [ctl[idx - 1] - atl[idx - 1] for idx in range(1, len(ctl))]
+    # Removing the first element as we only want the window to be 42 days
+    ctl, atl = ctl[1:], atl[1:]
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=date_array,
-                             y=ctl[1:],
+                             y=ctl,
                              mode='lines',
                              name='CTL',
                              line={'width': 4, 'color': 'blue'},
                              hovertemplate='CTL: %{y}<br>Date: %{x}<extra></extra>'))
     fig.add_trace(go.Scatter(x=date_array,
-                             y=atl[1:],
+                             y=atl,
                              mode='lines',
                              name='ATL',
                              line={'width': 4, 'color': 'red'},
@@ -65,6 +67,10 @@ def plot_tsb_ctl_atl() -> None:
                              name='TSB',
                              line={'width': 4, 'color': 'limegreen'},
                              hovertemplate='TSB: %{y}<br>Date: %{x}<extra></extra>'))
+
+    fig.add_shape(type="line",
+                  x0=date_array[0], x1=date_array[-1], y0=0, y1=0,
+                  line={'color': 'black', 'dash': 'dash', "width": 3})
 
     # Update the global kwargs with the figure-specific title
     title_params = {
@@ -80,9 +86,7 @@ def plot_tsb_ctl_atl() -> None:
     figure_kwargs = GLOBAL_LAYOUT_KWARGS.copy()
     figure_kwargs.update(title_params)
     fig.update_layout(figure_kwargs)
-
     fig.show()
-    return
 
 
 # def create_individual_ride_power_curve_plot(ride_id: int) -> None:
@@ -141,4 +145,5 @@ def plot_weekly_tss():
     figure_kwargs = GLOBAL_LAYOUT_KWARGS.copy()
     figure_kwargs.update(title_params)
     fig.update_layout(GLOBAL_LAYOUT_KWARGS)
+    fig.show()
     return fig
