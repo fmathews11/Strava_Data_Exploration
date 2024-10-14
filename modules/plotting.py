@@ -1,6 +1,8 @@
 import json
+import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+from modules.data_functions import create_ride_summary_dataframe
 from modules.objects.RideHub import RideHub
 from modules.training_stress_balance_functions import calculate_ctl_and_atl_arrays
 import matplotlib.pyplot as plt
@@ -11,7 +13,7 @@ with open('data/saved_strava_rides.json','r') as f:
     ride_hub = RideHub(*json.load(f))
 
 # Global layout parameters
-LAYOUT_KWARGS = {
+GLOBAL_LAYOUT_KWARGS = {
     "width": 1000,
     "height": 600,
     "paper_bgcolor": 'white',
@@ -74,7 +76,7 @@ def plot_tsb_ctl_atl() -> None:
              }
     }
 
-    figure_kwargs = LAYOUT_KWARGS.copy()
+    figure_kwargs = GLOBAL_LAYOUT_KWARGS.copy()
     figure_kwargs.update(title_params)
     fig.update_layout(figure_kwargs)
 
@@ -97,3 +99,34 @@ def create_individual_ride_power_curve_plot(ride_id: int) -> None:
     plt.vlines(x=1200, ymax=ymax, ymin=ymin, colors='yellow', linestyles="--")
     plt.annotate(text=f"20-minute average: {round(annotation_value)} watts", xy=(1400, annotation_value + 30), size=12)
     plt.show()
+
+    def plot_weekly_tss():
+        temp_df = create_ride_summary_dataframe()
+        temp_df['date_group'] = pd.to_datetime(temp_df.start_date) - pd.to_timedelta(7, unit='d')
+        plot_df = temp_df.groupby([pd.Grouper(key='date_group', freq="W")]).tss.sum()\
+            .reset_index().sort_values('date_group', ascending=False).copy()
+
+        plot_df['tss_smooth'] = plot_df['tss'].rolling(window=3, center=True).mean()
+
+        title_params = {
+            "title":
+                {"text": f"Weekly TSS - 2024",
+                 "x": 0.5,
+                 "font": {
+                     'size': 24,
+                     'color': 'black'}
+                 }
+        }
+
+        # Create the bar chart
+        fig = go.Figure()
+
+        # Add the bar trace for TSS values
+        fig.add_trace(go.Bar(x=plot_df['date_group'], y=plot_df['tss'], name='Weekly TSS'))
+
+        # Add the trend line (line plot over the bars)
+        fig.add_trace(go.Scatter(x=plot_df['date_group'], y=plot_df['tss_smooth'], mode='lines', showlegend=False))
+        figure_kwargs = GLOBAL_LAYOUT_KWARGS.copy()
+        figure_kwargs.update(title_params)
+        fig.update_layout(GLOBAL_LAYOUT_KWARGS)
+        return fig
