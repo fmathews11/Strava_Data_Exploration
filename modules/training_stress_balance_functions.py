@@ -28,10 +28,7 @@ def calculate_ewma(array: Union[list, np.ndarray], alpha: float) -> np.ndarray:
     return np.array(output)
 
 
-def get_daily_tss_score_array() -> np.ndarray:
-    """This function computes the daily TSS (training stress score) for the last 43 days.
-    Days with no training are filled in with a value of zero.
-    """
+def get_daily_tss_score_dataframe() -> pd.DataFrame:
     cutoff_date = datetime.today() - timedelta(days=43)
     summary_df = create_ride_summary_dataframe()
     filtered_df = summary_df.loc[summary_df.start_date >= str(cutoff_date)][['start_date', 'tss']].set_index(
@@ -39,8 +36,14 @@ def get_daily_tss_score_array() -> np.ndarray:
     filtered_df.index = pd.to_datetime(filtered_df.index)
     filtered_df = filtered_df.groupby(filtered_df.index.date).tss.sum()
     date_range = pd.date_range(filtered_df.index.min(), datetime.today())
-    filled_df = filtered_df.reindex(date_range, fill_value=0).reset_index(drop=True)
-    return filled_df.to_numpy()
+    return filtered_df.reindex(date_range, fill_value=0).rename_axis('date').reset_index()
+
+
+def get_daily_tss_score_array() -> np.ndarray:
+    """This function computes the daily TSS (training stress score) for the last 43 days.
+    Days with no training are filled in with a value of zero.
+    """
+    return get_daily_tss_score_dataframe().tss.to_numpy()
 
 
 def calculate_ctl_and_atl_arrays() -> tuple[np.ndarray, np.ndarray]:
