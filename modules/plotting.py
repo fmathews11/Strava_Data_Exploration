@@ -43,41 +43,45 @@ GLOBAL_LAYOUT_KWARGS = {
 
 def plot_tsb_ctl_atl() -> None:
     """Produces a plot showing CTL, ATL, and TSB over the last 42 days"""
-    plot_df = get_ctl_and_atl_dataframe().head(43)
-    date_array = plot_df.date.to_list()[:-1]
+    plot_df = get_ctl_and_atl_dataframe().head(43).sort_values('date', ascending=True)
     ctl, atl = plot_df.ctl.to_numpy(), plot_df.atl.to_numpy()
-    tsb = [ctl[idx - 1] - atl[idx - 1] for idx in range(1, len(ctl))]
-    # Removing the first element as we only want the window to be 42 days
-    ctl, atl = ctl[1:], atl[1:]
+    tsb = [0]
+    tsb.extend([ctl[idx - 1] - atl[idx - 1] for idx in range(1, len(ctl))])
+    plot_df['tsb'] = tsb
+    plot_df = plot_df.sort_values('date', ascending=False).head(42).reset_index(drop=True)
+
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=date_array,
-                             y=ctl,
+    fig.add_trace(go.Scatter(x=plot_df.date.tolist(),
+                             y=plot_df.ctl,
                              mode='lines',
                              name='CTL',
                              line={'width': 4, 'color': 'blue'},
                              hovertemplate='CTL: %{y}<br>Date: %{x}<extra></extra>'))
-    fig.add_trace(go.Scatter(x=date_array,
-                             y=atl,
+    fig.add_trace(go.Scatter(x=plot_df.date.tolist(),
+                             y=plot_df.atl,
                              mode='lines',
                              name='ATL',
                              line={'width': 4, 'color': 'red'},
                              opacity=0.7,
                              hovertemplate='ATL: %{y}<br>Date: %{x}<extra></extra>'))
-    fig.add_trace(go.Scatter(x=date_array,
-                             y=tsb,
+    fig.add_trace(go.Scatter(x=plot_df.date.tolist(),
+                             y=plot_df.tsb,
                              mode='lines',
                              name='TSB',
                              line={'width': 4, 'color': 'limegreen'},
                              hovertemplate='TSB: %{y}<br>Date: %{x}<extra></extra>'))
 
     fig.add_shape(type="line",
-                  x0=date_array[0], x1=date_array[-1], y0=0, y1=0,
+                  x0=plot_df.date.tolist()[0], x1=plot_df.date.tolist()[-1], y0=0, y1=0,
                   line={'color': 'black', 'dash': 'dash', "width": 3})
 
     # Update the global kwargs with the figure-specific title
     title_params = {
         "title":
-            {"text": f"Training Stress Balance/Load | CTL:{round(ctl[-1])}  ATL:{round(atl[-1])}  TSB:{round(tsb[-1])}",
+            {"text": f"Training Stress Balance/Load | "
+                     f"CTL:{round(plot_df.ctl.tolist()[0])}  "
+                     f"ATL:{round(plot_df.atl.tolist()[0])}  "
+                     f"TSB:{round(plot_df.tsb.tolist()[0])}",
              "x": 0.5,
              "font": {
                  'size': 24,
