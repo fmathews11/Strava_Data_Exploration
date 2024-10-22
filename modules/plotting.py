@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 from modules.data_functions import create_ride_summary_dataframe
 from modules.objects.RideHub import RideHub
-from modules.training_stress_balance_functions import calculate_ctl_and_atl_arrays
+from modules.training_stress_balance_functions import calculate_ctl_and_atl_arrays, get_ctl_and_atl_dataframe
 
 # import matplotlib.pyplot as plt
 # import seaborn as sns
@@ -43,8 +43,9 @@ GLOBAL_LAYOUT_KWARGS = {
 
 def plot_tsb_ctl_atl() -> None:
     """Produces a plot showing CTL, ATL, and TSB over the last 42 days"""
-    date_array = list(reversed([(datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(43)]))
-    ctl, atl = calculate_ctl_and_atl_arrays()
+    plot_df = get_ctl_and_atl_dataframe().head(43)
+    date_array = plot_df.date.to_list()[:-1]
+    ctl, atl = plot_df.ctl.to_numpy(), plot_df.atl.to_numpy()
     tsb = [ctl[idx - 1] - atl[idx - 1] for idx in range(1, len(ctl))]
     # Removing the first element as we only want the window to be 42 days
     ctl, atl = ctl[1:], atl[1:]
@@ -60,6 +61,7 @@ def plot_tsb_ctl_atl() -> None:
                              mode='lines',
                              name='ATL',
                              line={'width': 4, 'color': 'red'},
+                             opacity=0.7,
                              hovertemplate='ATL: %{y}<br>Date: %{x}<extra></extra>'))
     fig.add_trace(go.Scatter(x=date_array,
                              y=tsb,
@@ -86,7 +88,7 @@ def plot_tsb_ctl_atl() -> None:
     figure_kwargs = GLOBAL_LAYOUT_KWARGS.copy()
     figure_kwargs.update(title_params)
     fig.update_layout(figure_kwargs)
-    fig.show()
+    return fig
 
 
 # def create_individual_ride_power_curve_plot(ride_id: int) -> None:
@@ -145,5 +147,4 @@ def plot_weekly_tss():
     figure_kwargs = GLOBAL_LAYOUT_KWARGS.copy()
     figure_kwargs.update(title_params)
     fig.update_layout(GLOBAL_LAYOUT_KWARGS)
-    fig.show()
     return fig
