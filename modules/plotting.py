@@ -41,7 +41,7 @@ GLOBAL_LAYOUT_KWARGS = {
 }
 
 
-def plot_tsb_ctl_atl() -> None:
+def plot_tsb_ctl_atl():
     """Produces a plot showing CTL, ATL, and TSB over the last 42 days"""
     plot_df = get_ctl_and_atl_dataframe().head(43).sort_values('date', ascending=True)
     ctl, atl = plot_df.ctl.to_numpy(), plot_df.atl.to_numpy()
