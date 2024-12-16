@@ -18,7 +18,7 @@ def main():
         headers = {'Authorization': f'Authorization: Bearer {token}'}
         processor = RideDataProcessor(token, headers, saved_ride_hub)
         processor.retrieve_and_process_new_ride_data()
-        print("Data refreshed")
+        st.success("Data refreshed")
 
 
 if __name__ == "__main__":
