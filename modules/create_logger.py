@@ -1,6 +1,5 @@
 from typing import Literal
 import logging
-from logging import Logger
 import sys
 
 # Logging
@@ -16,7 +15,7 @@ allowed_logging_values = Literal['debug', 'error', 'critical', 'info', 'warning'
 
 
 def create_logger(logger_name: str,
-                  logging_level: allowed_logging_values) -> Logger:
+                  logging_level: allowed_logging_values) -> logging.Logger:
     """Returns a logging.Logger object with the name assigned to the `logger_name` parameter
     and the logging level assigned to the `logging_level` parameter
 
