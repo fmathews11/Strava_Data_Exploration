@@ -37,9 +37,23 @@ class RideDataProcessor:
         self.headers = headers
         self.ride_hub = ride_hub
 
-    def retrieve_and_process_new_ride_data(self):
+    def retrieve_and_process_new_ride_data(self, streamlit_status_placeholder=None) -> int:
         """
-        Retrieves and processes new ride data with power meter data, and updates the ride hub.
+        Retrieve and process new ride data that have power meter data available. Optionally
+        provides status updates through a placeholder widget and saves updated ride hub
+        data upon completion.
+
+        Parameters
+        ----------
+        streamlit_status_placeholder : A streamlit empty object
+            A placeholder for updating status messages, primarily used for live status
+            updates in a Streamlit application.
+
+        Returns
+        -------
+        int
+            The number of new rides processed and added to the ride hub.  This is for surfacing
+            in Streamlit
         """
         all_activities = get_activity_data(self.token, params={'per_page': 200})
         ride_ids_with_power_meter_data = [activity['id'] for activity in all_activities if activity.get('device_watts')]
@@ -47,14 +61,28 @@ class RideDataProcessor:
 
         logger.info(f"{len(new_ride_ids)} rides to add to pre-existing ride hub")
         if not new_ride_ids:
-            logger.info("No new rides to add")
-            return
+            if streamlit_status_placeholder:
+                streamlit_status_placeholder.info("No new rides to add.")
+            return 0
 
-        for ride_id in tqdm(new_ride_ids):
+        total_new_rides = len(new_ride_ids)
+
+        # Process each ride and update the placeholder
+        for idx, ride_id in enumerate(tqdm(new_ride_ids), start=1):
             self.process_single_ride(ride_id, all_activities)
+
+            # Streamlit portion
+            if streamlit_status_placeholder:
+                streamlit_status_placeholder.info(f"Processing ride {idx} of {total_new_rides}...")
+
             time.sleep(np.random.randint(5, 8))
 
+        # Save
         self._save_ride_hub_to_file()
+        if streamlit_status_placeholder:
+            streamlit_status_placeholder.success(f"Processed {total_new_rides} rides successfully!")
+
+        return total_new_rides
 
     def process_single_ride(self, ride_id: int, all_activities: list[dict]) -> None:
         """
