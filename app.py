@@ -17,8 +17,13 @@ def main():
         token = generate_access_token()
         headers = {'Authorization': f'Authorization: Bearer {token}'}
         processor = RideDataProcessor(token, headers, saved_ride_hub)
-        processor.retrieve_and_process_new_ride_data()
-        st.success("Data refreshed")
+
+        status_placeholder = st.empty()
+        updated_count = processor.retrieve_and_process_new_ride_data(status_placeholder)
+        if updated_count > 0:
+            st.success(f"Data refreshed: {updated_count} new rides have been added.")
+        else:
+            st.info("No new rides to update.")
 
 
 if __name__ == "__main__":
