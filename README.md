@@ -70,6 +70,36 @@ Normalized power is calculated as:
 $W = \large \sqrt[\leftroot{-2}\uproot{2}4]{ \frac{s^4}{\bar{s^4}}}\$
 
 ### Intensity Factor (IF)
+Intensity Factor (IF) is a simple yet powerful metric that provides a relative measure of how intense a cycling workout was compared to the rider's own Functional Threshold Power (FTP). 
+It's calculated by dividing the Normalized Power (NP) of a ride by the rider's FTP:
+
+$IF = \frac{NP}{FTP}$
+
+An IF of 1.0 signifies that the Normalized Power for the ride was exactly equal to the rider's FTP. This would be akin to an all-out effort lasting approximately one hour. For longer, less strenuous rides, the IF will typically be lower (e.g., 0.70-0.85 for endurance rides), while shorter, very intense efforts or interval sessions might yield an IF closer to, or even slightly above, 1.0 for the duration of those efforts, though the overall ride IF would rarely exceed 1.15 for any significant duration. IF provides a standardized way to compare the intensity of different workouts, even if they vary in duration or power profile.
 
 ### Training Stress Score (TSS)
+Training Stress Score (TSS) is a composite number that takes into account both the intensity (via IF) and the duration of a training session to provide a single value representing the overall training load or "stress" of that workout. It's a cornerstone metric for many cyclists and coaches for tracking training load over time. The formula for TSS is:
 
+$TSS = \frac{(Duration \, in \, seconds \times NP \times IF)}{(FTP \times 3600)} \times 100$
+
+Essentially, a one-hour ride at your FTP (meaning NP = FTP, so IF = 1.0) will yield exactly 100 TSS. Longer or more intense rides will accumulate more TSS, 
+while shorter or easier rides will result in lower TSS. 
+For example, a two-hour ride at an IF of 0.707 (which would mean NP is about 70.7% of FTP) would also yield approximately 100 TSS. 
+This score allows for a more apples-to-apples comparison of the physiological stress induced by different types of workouts, helping to manage training load and prevent overtraining or undertraining. 
+It's the foundation upon which ATL and CTL are built.
+
+# What does this allow me to do?
+
+A few things:
+ - I am now able to better quantify how much "strain" I am undertaking on an individual ride, or within a week.  Often
+times cyclists aim for a certain number of miles, or a certain amount of time on a bike within a given time frame.
+The flaw in this approach - not all hours and miles are created equal.  While this approach is far from perfect,
+I am now able to **more** accurately quantify the strain I'm sustaining within any given time period.  
+- Begin to track trends over time.  Some cyclists or cycling coaches swear by training stress balance and use it
+as an "end-all-be-all" metric.  Others discount it completely.  Do I perform better (better meaning lower heart rate
+compared to previous similar IF values) when my TSB his higher?  Additionally, I've always perceived my performance
+to be better in the morning than in the evenings.  I now can test this with the data I've collected.
+
+I know there are several paid platforms that calculate these things for you, but in order to truly understand 
+and interpret these metrics, I wanted to build and implement them myself.  What these platforms don't (usually) offer
+is access to the raw data which powers these insights.  I now have both, and have learned a ton along the way!
